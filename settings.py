@@ -3,10 +3,10 @@ TITLE = "Platformer"
 WIDTH = 720
 HEIGHT = 480
 FPS = 60
-FONT_NAME = 'arial'
+FONT_NAME = 'arial-bold'
 
 # player properties
-PLAYER_ACC = 1.2
+PLAYER_ACC = 1.1
 PLAYER_FRICTION = -0.2
 PLAYER_TOPSPEED = 6
 PLAYER_GRAVITY = 0.9
@@ -14,7 +14,7 @@ PLAYER_GRAVITY = 0.9
 # starting platforms
 
 PLATFORM_LIST = [(0, HEIGHT - 40, WIDTH, 40),
-                 (WIDTH / 2 - 50, HEIGHT / 2, 100, 20)]
+                 (WIDTH / 2 - 50, HEIGHT / 2 + 50, 100, 20)]
 
 # define colors
 WHITE = (255, 255, 255)

@@ -38,12 +38,29 @@ class Game:
     def update(self):
         # game loop - update
         self.all_sprites.update()
-        # check if player is falling to collide
-        if self.player.vel.y > 0:
+
+        hits = pg.sprite.spritecollide(self.player, self.platforms, False)
+        if hits:
             hits = pg.sprite.spritecollide(self.player, self.platforms, False)
+            if self.player.pos.y > hits[0].rect.top + 20:
+                print("can collide")
+                if self.player.vel.x > 0:
+                    print("hitting left")
+                    self.player.pos.x = hits[0].rect.left - 20
+                if self.player.vel.x < 0:
+                    print("hitting right")
+                    self.player.pos.x = hits[0].rect.right + 20
+
+        # check if player is falling to collide
+        
+        if self.player.vel.y > 0:
+            
+            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
+            
             if hits:
-                self.player.pos.y = hits[0].rect.top + 1
-                self.player.vel.y = 0
+                if self.player.pos.y < hits[0].rect.top + 20:
+                    self.player.pos.y = hits[0].rect.top + 1
+                    self.player.vel.y = 0
         # check if player is rising to collide
         if self.player.vel.y < 0:
             hits = pg.sprite.spritecollide(self.player, self.platforms, False)

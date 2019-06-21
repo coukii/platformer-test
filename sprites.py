@@ -33,7 +33,7 @@ class Player(pg.sprite.Sprite):
 
     def update(self):
         self.acc = vec(0, PLAYER_GRAVITY)
-        # apply friction
+
 
         keys = pg.key.get_pressed()
         if self.onground == True:
@@ -44,6 +44,7 @@ class Player(pg.sprite.Sprite):
                 self.acc.x = PLAYER_ACC
                 # print("moving")
             else:
+                # apply friction when slowing
                 self.acc.x += self.vel.x * PLAYER_FRICTION
                 # print("stopped/slowing")
 
@@ -54,7 +55,6 @@ class Player(pg.sprite.Sprite):
             self.vel.x = PLAYER_TOPSPEED
         if self.vel.x < PLAYER_TOPSPEED * -1:
             self.vel.x = PLAYER_TOPSPEED * -1
-
 
         # equations of motion
         self.vel = self.vel + 0.5 * self.acc #v = ut + 1/2at^2
