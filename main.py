@@ -1,161 +1,91 @@
-import pygame as pg
+import pygame
 import random
-from settings import *
-from sprites import *
+from scores import *
 
-class Game:
-    def __init__(self):
-        # init game window, etc
-        pg.init()
-        pg.mixer.init()
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        pg.display.set_caption(TITLE)
-        self.clock = pg.time.Clock()
-        self.running = True
-        self.font_name = pg.font.match_font(FONT_NAME)
+WIDTH = 1280
+HEIGHT = 720
+FPS = 30
 
-    def new(self):
-        # start a new game
-        self.all_sprites = pg.sprite.Group()
-        self.platforms = pg.sprite.Group()
-        self.player = Player(self)
-        self.all_sprites.add(self.player)
-        for plat in PLATFORM_LIST:
-            p = Platform(*plat)
-            self.all_sprites.add(p)
-            self.platforms.add(p)
-        self.run()
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
 
-    def run(self):
-        # game loop
-        self.playing = True
-        while self.playing:
-            self.clock.tick(FPS)
-            self.events()
-            self.update()
-            self.draw()
+# init pygame, create window
+pygame.init()
+pygame.mixer.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Programming Project 1")
+clock = pygame.time.Clock()
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, letter, score, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((70,70))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.letterfont = pygame.font.SysFont('Times New Roman', 36)
+        self.scorefont = pygame.font.SysFont('Times New Roman', 16)
+        self.letter = letter
+        self.score = score
+        self.letterrender = self.letterfont.render(self.letter, True, BLACK)
+        self.scorerender = self.scorefont.render(self.score, True, BLACK)
+        #pygame.display.update
 
     def update(self):
-        # game loop - update
-        self.all_sprites.update()
+        screen.blit(self.letterrender, (self.rect.centerx - (self.letterfont.size(self.letter)[0] / 2.), self.rect.centery - (self.letterfont.size(self.letter)[1] / 2.)))
+        screen.blit(self.scorerender, (self.rect.right - (self.scorefont.size(self.score)[0]) - 2, self.rect.bottom - (self.scorefont.size(self.score)[1])))
 
-        hits = pg.sprite.spritecollide(self.player, self.platforms, False)
-        if hits:
-            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
-            if self.player.pos.y > hits[0].rect.top + 20:
-                print("can collide")
-                if self.player.vel.x > 0:
-                    print("hitting left")
-                    self.player.pos.x = hits[0].rect.left - 20
-                if self.player.vel.x < 0:
-                    print("hitting right")
-                    self.player.pos.x = hits[0].rect.right + 20
+class Selection(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((70, 70))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
 
-        # check if player is falling to collide
-        
-        if self.player.vel.y > 0:
-            
-            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
-            
-            if hits:
-                if self.player.pos.y < hits[0].rect.top + 20:
-                    self.player.pos.y = hits[0].rect.top + 1
-                    self.player.vel.y = 0
-        # check if player is rising to collide
-        if self.player.vel.y < 0:
-            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
-            if hits:
-                self.player.pos.y = hits[0].rect.bottom + 40
-                self.player.vel.y = 0
-        # if player reaches right 1/4 of screen
-        if self.player.rect.right >= WIDTH * 3/4:
-            # if self.player.vel.x > 0:
-            self.player.pos.x -= max(abs(self.player.vel.x),2)
-            for plat in self.platforms:
-                plat.rect.right-= max(abs(self.player.vel.x),2)
-                if plat.rect.right <= 0:
-                    print("kill")
-                    plat.kill()
+all_sprites = pygame.sprite.Group()
 
-        # # if player reaches left 1/4 of screen
-        # if self.player.rect.left <= WIDTH * 1/4:
-        #     # if self.player.vel.x > 0:
-        #     self.player.pos.x += max(abs(self.player.vel.x),2)
-        #     for plat in self.platforms:
-        #         plat.rect.right += max(abs(self.player.vel.x),2)
+board=[[0,0,0,0],
+       [0,0,0,0],
+       [0,0,0,0],
+       [0,0,0,0]]
 
-        # Death
-        if self.player.rect.top > HEIGHT:
-            for sprite in self.all_sprites:
-                sprite.rect.y -= max(self.player.vel.y, 10)
-                if sprite.rect.bottom < 0:
-                    sprite.kill()
-        if len(self.platforms) == 0:
-            self.playing = False
+for column in range(0,4):
+    for row in range(0,4):
+        tileInfo = random.choice(list(LETTERSCORES.items()))
+        tile = Tile(tileInfo[0], str(tileInfo[1]), (WIDTH / 2) + (column * 70) + (column * 10) - 155, (HEIGHT * 0.75) + (row * 70) + (row * 10) - 155)
+        all_sprites.add(tile)
+        print("adding row", row, "column", column)
+        board[row][column] = tile
 
-        #spawn new platforms
-        while len(self.platforms) < 3 and self.player.rect.top < HEIGHT:
-            print("spawning")
-            width = random.randrange(50,100)
-            p = Platform(random.randrange(WIDTH + 10, WIDTH + 20), random.randrange(HEIGHT / 2,  HEIGHT - 40), width, 20)
-            self.platforms.add(p)
-            self.all_sprites.add(p)
+selectedTile = board[0][0]
 
-    def events(self):
-        # game loop - events
-        for event in pg.event.get():
-            # check for closing window
-            if event.type == pg.QUIT:
-                if self.playing:
-                    self.playing = False
-                self.running = False
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_SPACE:
-                    self.player.jump()
+selection = Selection(selectedTile.rect.left, selectedTile.rect.top)
+all_sprites.add(selection)
 
-    def draw(self):
-        # game loop - draw
-        self.screen.fill(BGCOLOR)
-        self.all_sprites.draw(self.screen)
-        # *after* drawing everything, flip the display
-        pg.display.flip()
+# ADD GREEN TILES TO EVERY TILE OBJECT (BLACK AS DEFAULT)
+# ENABLE WHEN SELECTED
 
-    def show_start_screen(self):
-        # game splash/start screen
-        self.screen.fill(BGCOLOR)
-        self.draw_text(TITLE, 48, DARKGREEN, WIDTH / 2, HEIGHT / 4)
-        self.draw_text("Arrows to move, Space to jump", 22, DARKGREEN, WIDTH / 2, HEIGHT / 2)
-        pg.display.flip()
-        self.wait_for_key()
+# Game loop
+running = True
+while running:
+    clock.tick(FPS)
+    # Process input (events)
+    for event in pygame.event.get():
+        # Check for closing window
+        if event.type == pygame.QUIT:
+            running = False
 
-    def show_go_screen(self):
-        # game over/continue
-        pass
+    # Draw / render
+    screen.fill(BLACK)
+    all_sprites.draw(screen)
+    # Update sprites
+    all_sprites.update()
+    # Flip the display
+    pygame.display.flip()
 
-    def wait_for_key(self):
-        waiting = True
-        while waiting:
-            self.clock.tick(FPS)
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    waiting = False
-                    self.running = False
-                if event.type == pg.KEYUP:
-                    waiting = False
-
-    def draw_text(self, text, size, color, x, y):
-        font = pg.font.Font(self.font_name, size)
-        text_surface = font.render(text, True, color)
-        text_rect = text_surface.get_rect()
-        text_rect.midtop = (x, y)
-        self.screen.blit(text_surface, text_rect)
-
-
-g = Game()
-
-g.show_start_screen()
-while g.running:
-    g.new()
-    g.show_go_screen()
-
-pg.quit()
+pygame.quit()
